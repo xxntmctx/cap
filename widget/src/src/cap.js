@@ -442,6 +442,7 @@
   class CapWidget extends HTMLElement {
     static formAssociated = true;
     #resetTimer = null;
+    #retryTimer = null;
     #workersCount = navigator.hardwareConcurrency || 8;
     token = null;
     #shadow;
@@ -930,6 +931,11 @@
     async solve() {
       if (this.#solving) {
         return;
+      }
+
+      if (this.#retryTimer) {
+        clearTimeout(this.#retryTimer);
+        this.#retryTimer = null;
       }
 
       this.#enforceCredits();
@@ -1661,6 +1667,13 @@
       this.executeAttributeCode("onerror", event);
 
       if (this.#hasHaptics) navigator.vibrate([10, 40, 10]);
+
+      if (this.#retryTimer) {
+        clearTimeout(this.#retryTimer);
+      }
+      this.#retryTimer = setTimeout(() => {
+        this.solve();
+      }, 2000);
     }
 
     handleReset(event) {
@@ -1702,6 +1715,10 @@
         clearTimeout(this.#resetTimer);
         this.#resetTimer = null;
       }
+      if (this.#retryTimer) {
+        clearTimeout(this.#retryTimer);
+        this.#retryTimer = null;
+      }
       this.token = null;
       this.dispatchEvent("reset");
       this.#setToken("");
@@ -1735,6 +1752,10 @@
       if (this.#resetTimer) {
         clearTimeout(this.#resetTimer);
         this.#resetTimer = null;
+      }
+      if (this.#retryTimer) {
+        clearTimeout(this.#retryTimer);
+        this.#retryTimer = null;
       }
 
       this.#detachInteractionListeners();

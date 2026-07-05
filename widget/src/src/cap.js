@@ -33,12 +33,27 @@
   const since = (t) => `${Math.round(performance.now() - t)}ms`;
   const _err = (code, message) => Object.assign(new Error(message), { code });
 
-  const capFetch = (u, conf = {}) => {
-    if (window?.CAP_CUSTOM_FETCH) {
-      return window.CAP_CUSTOM_FETCH(u, conf);
+  const capFetch = async (u, conf = {}) => {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 5000);
+
+    if (conf.signal) {
+      if (conf.signal.aborted) {
+        controller.abort();
+      } else {
+        conf.signal.addEventListener("abort", () => controller.abort(), { once: true });
+      }
     }
 
-    return fetch(u, conf);
+    try {
+      const fetchOptions = { ...conf, signal: controller.signal };
+      if (window?.CAP_CUSTOM_FETCH) {
+        return await window.CAP_CUSTOM_FETCH(u, fetchOptions);
+      }
+      return await fetch(u, fetchOptions);
+    } finally {
+      clearTimeout(id);
+    }
   };
 
   const raceAbort = (promise, signal) => {
@@ -1419,14 +1434,14 @@
 
       this.#credits = document.createElement("a");
       this.#credits.className = "credits";
-      this.#credits.setAttribute("aria-label", "Secured by Cap");
-      this.#credits.setAttribute("href", "https://trycap.dev");
+      this.#credits.setAttribute("aria-label", "Secured by Yuncat");
+      this.#credits.setAttribute("href", "https://cloud.yuncat.vip");
       this.#credits.setAttribute("target", "_blank");
       this.#credits.setAttribute(
         "title",
-        "Secured by Cap: The self-hosted CAPTCHA for the modern web.",
+        "Secured by Yuncat: The self-hosted CAPTCHA for the modern web.",
       );
-      this.#credits.textContent = "Cap";
+      this.#credits.textContent = "Yuncat";
       this.#div.appendChild(this.#credits);
 
       this.#shadow.innerHTML = `<style${window.CAP_CSS_NONCE ? ` nonce=${window.CAP_CSS_NONCE}` : ""}>%%capCSS%%</style>`;
@@ -1443,7 +1458,7 @@
       this.#credits.addEventListener("click", (e) => {
         e.preventDefault();
         window.open(
-          `https://trycap.dev/?${new URLSearchParams(
+          `https://cloud.yuncat.vip/?${new URLSearchParams(
             // this attribution is only for our plausible analytics
             // instance. no personal data is collected.
             {
@@ -1503,10 +1518,10 @@
         this.#div.appendChild(this.#credits);
       }
       if (!this.#credits.textContent || !this.#credits.textContent.trim()) {
-        this.#credits.textContent = "Cap";
+        this.#credits.textContent = "Yuncat";
       }
-      if (this.#credits.getAttribute("href") !== "https://trycap.dev") {
-        this.#credits.setAttribute("href", "https://trycap.dev");
+      if (this.#credits.getAttribute("href") !== "https://cloud.yuncat.vip") {
+        this.#credits.setAttribute("href", "https://cloud.yuncat.vip");
       }
       this.#credits.style.cssText = [
         "display: inline-flex !important",
@@ -1587,7 +1602,7 @@
         if (showTroubleshooting) {
           const troubleshootingUrl =
             this.getAttribute("data-cap-troubleshooting-url") ||
-            "https://trycap.dev/guide/troubleshooting/instrumentation.html";
+            "https://cloud.yuncat.vip";
           this.#troubleshootLink.setAttribute("href", troubleshootingUrl);
           this.#troubleshootLink.textContent = this.getI18nText(
             "troubleshooting-label",

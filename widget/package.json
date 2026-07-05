@@ -1,6 +1,7 @@
 {
   "name": "widget",
   "private": true,
+  "type": "module",
   "scripts": {
     "test": "bun test test/unit.test.js && bun test test/e2e.test.js && bun test test/e2e-instrumentation.test.js && bun test test/e2e-regression.test.js && bun test test/e2e-worker.test.js",
     "test:unit": "bun test test/unit.test.js",
